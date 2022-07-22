@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Mask Recycle</title>
+</head>
+
+<body>
+    <div class="container" style="height: 100%; min-height: 100%; ">
+        <div class="row h-100 align-items-center" style="margin-top: 20%;">
+            <div class="col-4" style="height: 100%;  padding-left: 5%; padding-right: 5%;">
+                <button type="button" id="startbtn" class="btn btn-success btn-block"
+                    style="height: 200px; font-size: 50px; margin-bottom: 50%; ">START</button>
+                <button type="button" data-toggle="modal" data-target="#myModal" id="stopbtn" class="btn btn-danger btn-block" data-bs-toggle="modal"
+                    data-bs-target="#modalForQRcode" style="height:200px; font-size: 50px;">STOP</button>
+                <!-- 按钮触发模态框 -->
+                <!-- <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">开始演示模态框</button> -->
+                <!-- 模态框（Modal） -->
+                <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header" style="text-align: center;">Congradulations, you collected 3 more points!</div>
+                            <div class="modal-body" style="text-align: center;">
+                                <div id="qrcode"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div>
+            </div>
+            <div class="col-8" style="height: 100%; ">
+                <div id="showImage" style="height: 500px; background-color: rgba(167, 167, 167, 1);">image</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+
+    <script>
+        // todo: write jQuery to implement START and STOP,change scene in #showImage
+        $(document).ready(function () {
+            $("#startbtn").click(function () {
+                // change the #showImage to real frams from camera
+            });
+
+            $("#stopbtn").click(() => {
+                $('#qrcode').qrcode({width: 200,height: 200,text: 'www.google.com'});
+            })
+        });
+    </script>
+</body>
+
+</html>
