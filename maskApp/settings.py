@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-jt=uw^^jy#9*r7uagd31!+0+7ypu!4t@5z^u#2to^l_#ivm+x^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '8d1b-150-116-47-102.jp.ngrok.io'
+]
 
 
 # Application definition
@@ -38,6 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'index'
+]
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
 ]
 
 MIDDLEWARE = [
@@ -122,3 +128,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# LINE chennel access
+LINE_CHANNEL_ACCESS_TOKEN = 'Ec6TsF3HiOYo1YPX8fQ+1jNXoxb/Z3ZEKD7SQR70AV2E1RjqDbsvwwppBThTMwQKCRnLb+5kCcgxhQgpocu51kG9gbABWrlKEvoANIhFZ5MeMf4AKvV6S7z+bZrGONEGzonnlSy5MYA2Xa739JgAGwdB04t89/1O/w1cDnyilFU='
+ 
+LINE_CHANNEL_SECRET = 'ed69efb55a3b7a0e597e07d4b932a3ec'

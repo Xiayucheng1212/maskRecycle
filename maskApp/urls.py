@@ -14,8 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from index.views import hello_world, home_page, user_insert,user_update,maskbase_insert,maskbase_update,user_find,user_all
+from django.urls import path, include
+from index.views import hello_world, home_page, user_insert,user_update,maskbase_insert,maskbase_update,user_find,user_all,mask_detect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +25,7 @@ urlpatterns = [
     path('user-all', user_all),
     path('user-find/<int:id>', user_find, name="user-find"),
     path('maskbase-insert/', maskbase_insert),
-    path('maskbase-update/', maskbase_update)
+    path('maskbase-update/', maskbase_update),
+    path('detect/', mask_detect),
+    path('masklinebot/', include('masklinebot.urls')) #包含應用程式的網址
 ]

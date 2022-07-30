@@ -9,8 +9,11 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-
+    {% load static %}  
+    <script src="{% static 'opencv.js' %}"type="text/javascript"></script>
+    <script src="{% static 'qrcode.min.js' %}"type="text/javascript"></script>
     <title>Mask Recycle</title>
+    
 </head>
 
 <body>
@@ -29,7 +32,7 @@
                         <div class="modal-content">
                             <div class="modal-header" style="text-align: center;">Congradulations, you collected 3 more points!</div>
                             <div class="modal-body" style="text-align: center;">
-                                <div id="qrcode"></div>
+                                <div id="qrcode" style="text-align: center;"></div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
@@ -39,7 +42,9 @@
                 </div>
             </div>
             <div class="col-8" style="height: 100%; ">
-                <div id="showImage" style="height: 500px; background-color: rgba(167, 167, 167, 1);">image</div>
+                <div id="showImage" style="height: 500px; background-color: rgba(167, 167, 167, 1); z-index: 100;">
+                    <video src="" id="videoInput" style="z-index: -100;"><canvas id="canvasOutput"></canvas></video>
+                </div>
             </div>
         </div>
     </div>
@@ -57,16 +62,63 @@
         crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 
+   
+
     <script>
         // todo: write jQuery to implement START and STOP,change scene in #showImage
+        var streamGlobal
         $(document).ready(function () {
             $("#startbtn").click(function () {
-                // change the #showImage to real frams from camera
+                // start video
+                startVideo();
             });
 
             $("#stopbtn").click(() => {
-                $('#qrcode').qrcode({width: 200,height: 200,text: 'www.google.com'});
+                $('#qrcode').empty()
+                $('#qrcode').qrcode({render: 'div',width: 200,height: 200,text: 'www.google.com'});
+                streamGlobal.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+                $('#canvasOutput').empty()
             })
+        
+            function startVideo(){
+                let video = document.getElementById("videoInput"); // video is the id of video tag
+                video.width = 640;
+                video.height = 500;
+                navigator.mediaDevices
+                .getUserMedia({ video: true, audio: false })
+                .then(function(stream) {
+                    streamGlobal = stream;
+                    video.srcObject = stream;
+                    video.play();
+                    let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+                    let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+                    let cap = new cv.VideoCapture(video);
+
+                    const FPS = 30;
+                    function processVideo() {
+                        try {
+                            let begin = Date.now();
+                            // start processing.
+                            cap.read(src);
+                            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+                            cv.imshow("canvasOutput", dst);
+                            // schedule the next one.
+                            let delay = 1000 / FPS - (Date.now() - begin);
+                            setTimeout(processVideo, delay);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+
+                    // schedule the first one.
+                    setTimeout(processVideo, 0);
+                })
+                .catch(function(err) {
+                    console.log("An error occurred! " + err);
+                });
+            }
         });
     </script>
 </body>

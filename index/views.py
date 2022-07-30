@@ -2,10 +2,11 @@ from cmath import log
 from django.shortcuts import render,HttpResponse
 from datetime import datetime
 from django.core import serializers
-from sqlalchemy import false
 from index.models import User
 from django.http import JsonResponse
 from yoloDetection.Yolo import main, Mask_detection
+import cv2 
+
 
 def hello_world(request):
     return render(request, 'hello_world.html', {
@@ -59,7 +60,32 @@ def add_points(request): # id, points_num GET
 
 def mask_detect(request):
     mask_obj = Mask_detection()
-    score = main(mask_obj, )
+    source_path = "./index/input_image/1.jpg"
+    save_path = "./index/output_image/1.jpg"
+    score = main(mask_obj, source_path, save_path)
 
-    return score
+    return JsonResponse({score: 1}, safe=False)
+
+
+# def camera_capture():
+#     cam = cv2.VideoCapture(0)
+#     cv2.namedWindow("test")
+#     img_counter = 0
+#     while True:
+#         ret, frame = cam.read()
+#         if not ret:
+#             print("failed to grab frame")
+#             break
+#         cv2.imshow("test", frame)
+#         k = cv2.waitKey(1)
+#         if k%256 == 27: # ESC pressed
+#             print("Escape hit, closing...")
+#             break
+#         elif k%256 == 32: # SPACE pressed
+#             img_name = "opencv_frame_{}.png".format(img_counter)
+#             cv2.imwrite(img_name, frame)
+#             print("{} written!".format(img_name))
+#             img_counter += 1
+#     cam.release()
+#     cv2.destroyAllWindows()
 
