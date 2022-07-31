@@ -3,11 +3,12 @@ import os
 from django.shortcuts import render,HttpResponse
 from datetime import datetime
 from django.core import serializers
+from parso import parse
 from index.models import User, Mask
 from django.http import JsonResponse
 from yoloDetection.Yolo import main, Mask_detection
-import cv2 
-
+from bluetooth import bluetooth
+import threading
 
 def hello_world(request):
     return render(request, 'hello_world.html', {
@@ -59,6 +60,21 @@ def maskbase_update():
 def add_points(request): # id, points_num GET
     return render(request, 'add_points_success.html', {}) #points username
 
+def transmitStart():
+    bt = bluetooth("/dev/tty.HC-06-SerialPort")
+    while not bt.is_open(): pass
+    print("BT Connected!")
+
+    def read():
+        while True:
+            if bt.waiting():
+                print(bt.readString())
+
+    readThread = threading.Thread(target=read)
+    readThread.setDaemon(True)
+    readThread.start()
+    bt.write("f") # f: start moving
+
 def mask_detect(request):
     detection_num = request.GET.get('detection_num')
     mask_obj = Mask_detection()
@@ -66,28 +82,6 @@ def mask_detect(request):
     save_path = "./index/output_image/detection_"+detection_num+".jpg"
     score = main(mask_obj, source_path, save_path)
     os.remove("../../../../Downloads/detection_"+detection_num+".png")
+    if int(score) >= 0.8: #threshold = 0.8 
+        transmitStart()
     return JsonResponse({0: score}, safe=False)
-
-
-# def camera_capture():
-#     cam = cv2.VideoCapture(0)
-#     cv2.namedWindow("test")
-#     img_counter = 0
-#     while True:
-#         ret, frame = cam.read()
-#         if not ret:
-#             print("failed to grab frame")
-#             break
-#         cv2.imshow("test", frame)
-#         k = cv2.waitKey(1)
-#         if k%256 == 27: # ESC pressed
-#             print("Escape hit, closing...")
-#             break
-#         elif k%256 == 32: # SPACE pressed
-#             img_name = "opencv_frame_{}.png".format(img_counter)
-#             cv2.imwrite(img_name, frame)
-#             print("{} written!".format(img_name))
-#             img_counter += 1
-#     cam.release()
-#     cv2.destroyAllWindows()
-
