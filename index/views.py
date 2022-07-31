@@ -1,8 +1,9 @@
 from cmath import log
+import os
 from django.shortcuts import render,HttpResponse
 from datetime import datetime
 from django.core import serializers
-from index.models import User
+from index.models import User, Mask
 from django.http import JsonResponse
 from yoloDetection.Yolo import main, Mask_detection
 import cv2 
@@ -59,12 +60,13 @@ def add_points(request): # id, points_num GET
     return render(request, 'add_points_success.html', {}) #points username
 
 def mask_detect(request):
+    detection_num = request.GET.get('detection_num')
     mask_obj = Mask_detection()
-    source_path = "./index/input_image/1.jpg"
-    save_path = "./index/output_image/1.jpg"
+    source_path = "../../../../Downloads/detection_"+detection_num+".png"
+    save_path = "./index/output_image/detection_"+detection_num+".jpg"
     score = main(mask_obj, source_path, save_path)
-
-    return JsonResponse({score: 1}, safe=False)
+    os.remove("../../../../Downloads/detection_"+detection_num+".png")
+    return JsonResponse({0: score}, safe=False)
 
 
 # def camera_capture():

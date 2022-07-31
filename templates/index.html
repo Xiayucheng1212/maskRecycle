@@ -12,6 +12,9 @@
     {% load static %}  
     <script src="{% static 'opencv.js' %}"type="text/javascript"></script>
     <script src="{% static 'qrcode.min.js' %}"type="text/javascript"></script>
+    <script src="{% static 'blob.js' %}"type="text/javascript"></script>
+    <script src="{% static 'fileSaver.js' %}"type="text/javascript"></script>
+    <script src="{% static 'html2canvas.min.js' %}" type="text/javascript" > </script>
     <title>Mask Recycle</title>
     
 </head>
@@ -31,8 +34,8 @@
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header" style="text-align: center;">Congradulations, you collected 3 more points!</div>
-                            <div class="modal-body" style="text-align: center;">
-                                <div id="qrcode" style="text-align: center;"></div>
+                            <div class="modal-body" style="display: block; margin-left: auto; margin-right: auto;">
+                                <div id="qrcode" style="width: auto;"></div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
@@ -42,8 +45,13 @@
                 </div>
             </div>
             <div class="col-8" style="height: 100%; ">
-                <div id="showImage" style="height: 500px; background-color: rgba(167, 167, 167, 1); z-index: 100;">
-                    <video src="" id="videoInput" style="z-index: -100;"><canvas id="canvasOutput"></canvas></video>
+
+                <div id="showImage" style="height: 500px; background-color: rgba(167, 167, 167, 1);">
+                    <video src="" id="videoInput" style="height: 500px; width: 730px;" ></video>
+                    <canvas id="canvasOutput"></canvas>
+                </div>
+                <div class="captureButtonWrapper"> 
+                    <button type="button" id="captureButton" class="btn btn-info btn-block">CAPTURE</button>
                 </div>
             </div>
         </div>
@@ -51,9 +59,7 @@
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
         crossorigin="anonymous"></script>
@@ -65,60 +71,72 @@
    
 
     <script>
-        // todo: write jQuery to implement START and STOP,change scene in #showImage
         var streamGlobal
+        var detection_num = 0
+        var mask_num = 0;
         $(document).ready(function () {
             $("#startbtn").click(function () {
-                // start video
                 startVideo();
             });
 
+            // stop video playing 
+            // TODO: clear video window and set home page image back
             $("#stopbtn").click(() => {
                 $('#qrcode').empty()
-                $('#qrcode').qrcode({render: 'div',width: 200,height: 200,text: 'www.google.com'});
-                streamGlobal.getTracks().forEach(function(track) {
-                    track.stop();
-                });
-                $('#canvasOutput').empty()
+                $('#qrcode').qrcode({render: 'div',width: 200,height: 200,text: mask_num});
+                stopVideo();
+            })
+
+            // capture image from webcam
+            // send GET ajax to backend -> receive confidence 
+            $("#captureButton").click(()=>{
+                imageCapture();
+                setTimeout(()=>{
+                    $.ajax({
+                        url: "http://127.0.0.1:8000/mask-detect",
+                        method: 'GET',
+                        dataType: 'json',
+                        data: {detection_num}
+                    }).then((result)=>{
+                        if( parseInt(result[0]) > 0){
+                            mask_num++;
+                            // TODO: set success image and keep processing by bluetooth
+                        }
+                    })
+                }, 4000)
             })
         
+            function imageCapture(){
+                const screenshotTarget = document.getElementById("videoInput");
+                return html2canvas(screenshotTarget).then(async (canvas) => {
+                        // Export canvas as a blob 
+                        canvas.toBlob(function(blob) {
+                            // Generate file download
+                            ++detection_num;
+                            window.saveAs(blob, "detection_"+detection_num+".png");
+                        });
+                        return canvas
+                    });
+            }
             function startVideo(){
                 let video = document.getElementById("videoInput"); // video is the id of video tag
-                video.width = 640;
-                video.height = 500;
                 navigator.mediaDevices
                 .getUserMedia({ video: true, audio: false })
                 .then(function(stream) {
                     streamGlobal = stream;
                     video.srcObject = stream;
                     video.play();
-                    let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-                    let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-                    let cap = new cv.VideoCapture(video);
-
-                    const FPS = 30;
-                    function processVideo() {
-                        try {
-                            let begin = Date.now();
-                            // start processing.
-                            cap.read(src);
-                            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-                            cv.imshow("canvasOutput", dst);
-                            // schedule the next one.
-                            let delay = 1000 / FPS - (Date.now() - begin);
-                            setTimeout(processVideo, delay);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    }
-
-                    // schedule the first one.
-                    setTimeout(processVideo, 0);
                 })
                 .catch(function(err) {
                     console.log("An error occurred! " + err);
                 });
             }
+            function stopVideo(){
+                streamGlobal.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+            }
+            
         });
     </script>
 </body>

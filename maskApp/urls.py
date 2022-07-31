@@ -13,9 +13,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import statistics
 from django.contrib import admin
+from django.conf import settings
 from django.urls import path, include
-from index.views import hello_world, home_page, user_insert,user_update,maskbase_insert,maskbase_update,user_find,user_all,mask_detect
+from django.conf.urls.static import static
+from index.views import home_page, user_insert,user_update,maskbase_insert,maskbase_update,user_find,user_all,mask_detect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,6 +29,6 @@ urlpatterns = [
     path('user-find/<int:id>', user_find, name="user-find"),
     path('maskbase-insert/', maskbase_insert),
     path('maskbase-update/', maskbase_update),
-    path('detect/', mask_detect),
-    path('masklinebot/', include('masklinebot.urls')) #包含應用程式的網址
-]
+    path('mask-detect/', mask_detect),
+    path('masklinebot/', include('masklinebot.urls')), #包含應用程式的網址
+]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
