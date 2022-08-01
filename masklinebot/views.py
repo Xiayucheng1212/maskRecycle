@@ -9,10 +9,10 @@ from django.core import serializers
  
 from linebot import LineBotApi, WebhookParser, WebhookHandler
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
-from linebot.models import MessageEvent, TextSendMessage, StickerSendMessage, LocationSendMessage
+from linebot.models import MessageEvent, TextSendMessage, StickerSendMessage, LocationSendMessage, QuickReplyButton, QuickReply, MessageAction
 import requests
 import urllib.request
-from index.models import User, Mask
+from index.models import User, MaskBase
  
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 parser = WebhookParser(settings.LINE_CHANNEL_SECRET)
@@ -51,23 +51,35 @@ def callback(request):
 
 @handler.add(MessageEvent)#, message=TextMessage)
 def handle_message(event):
-    print(event.source)
+    # print(event.source)
 
     if(event.type == 'message'):
         message = event.message
-        print(message)
-        if(message.type == 'text'):
-            reply = handleText(message, event.reply_token, event.source)
-        elif(message.type == 'location'):
-            reply = handleLocation(message,event.reply_token,event.source)
-        else:
-            reply = handleOthers(message,event.reply_token,event.source)
+        # print(message)
+        # if(message.type == 'text' and message.text == "員工註冊"):
+        #     pass
+        # else:
+        character = isStaff(event.source.user_id)
+        if(character == 0): # for customer
+            if(message.type == 'text'):
+                reply = handleCustomerText(message, event.reply_token, event.source)
+            elif(message.type == 'location'):
+                reply = handleCustomerLocation(message,event.reply_token,event.source)
+            else:
+                reply = handleOthers(message,event.reply_token,event.source)
+        elif(character == 1): # for staff
+            if(message.type == 'text'):
+                reply = handleStaffText(message, event.reply_token, event.source)
+            elif(message.type == 'location'):
+                reply = handleStaffLocation(message,event.reply_token,event.source)
+            else:
+                reply = handleOthers(message,event.reply_token,event.source)
     
     line_bot_api.reply_message(
         event.reply_token,
         reply)
-
-def handleText(message, reply_token, source):
+# customers
+def handleCustomerText(message, reply_token, source):
     text_msg = ""
 
     userID = source.user_id
@@ -88,7 +100,7 @@ def handleText(message, reply_token, source):
     return_msg = TextSendMessage(text = text_msg)
     return return_msg
 
-def handleLocation(message, reply_token, source):
+def handleCustomerLocation(message, reply_token, source):
     return_msg = []
     address = message.address
     latitude = message.latitude
@@ -112,10 +124,118 @@ def handleOthers(message, reply_token, source):
                                 )
     return sticker_message
 
-
 def getUserPoints(userID):
     try:
         unit = User.objects.get(username = userID)
         return unit.points
     except:
         return -1
+
+def isStaff(userID):
+    try:
+        unit = User.objects.get(username = userID)
+        return unit.character
+    except:
+        return -1
+
+# staff
+def handleStaffText(message, reply_token, source):
+    text_msg = ""
+
+    userID = source.user_id
+    # print(userID)
+    profile = line_bot_api.get_profile(userID)
+    userName = profile.display_name
+    if(message.text == "更新據點"):
+        return_msg = TextSendMessage(text='請選擇',
+                                        quick_reply=QuickReply(items=[
+                                            QuickReplyButton(action=MessageAction(label="新增據點", text="新增據點")),
+                                            QuickReplyButton(action=MessageAction(label="刪除據點", text="刪除據點")),
+                                            QuickReplyButton(action=MessageAction(label="清理據點", text="清理據點"))
+                                        ]))
+        return return_msg
+    elif(message.text == "新增據點"):
+        res = updateStaffAction(userID, "create")
+        if(res == 1): text_msg = "請傳送您現在位置~"
+        else: text_msg = "發生錯誤"
+    elif(message.text == "刪除據點"):
+        res = updateStaffAction(userID, "delete")
+        if(res == 1): text_msg = "請傳送您現在位置~"
+        else: text_msg = "發生錯誤"
+    elif(message.text == "清理據點"):
+        res = updateStaffAction(userID, "cleanup")
+        if(res == 1): text_msg = "請傳送您現在位置~"
+        else: text_msg = "發生錯誤"
+    else:
+        text_msg = userName + "謝謝你~"
+    
+    return_msg = TextSendMessage(text = text_msg)
+    return return_msg
+
+def handleStaffLocation(message, reply_token, source):
+    userID = source.user_id
+    address = message.address
+    latitude = message.latitude
+    longitude = message.longitude
+    current_action =  getStaffAction(userID)
+    res = 0
+    if(current_action == "create"):
+        remain=10
+        total_capacity=10
+        capability=0
+        res = maskbaseInsert(remain, total_capacity, capability, address, latitude, longitude)
+    elif(current_action == "delete"):
+        res = maskbaseDelete(address)
+    elif(current_action == "cleanup"):
+        res = maskbaseCleanup(address)
+
+    if(res == -1):
+        text_msg = "發生錯誤"
+    elif(res == 1):
+        text_msg = "更新完成!"
+        res = updateStaffAction(userID, "none")
+    else:
+        text_msg = "請點擊 更新據點按鈕 選擇執行動作~"
+
+    return_msg = TextSendMessage(text = text_msg)
+    return return_msg
+
+def updateStaffAction(userID, current_action):
+    try:
+        User.objects.filter(username=userID).update(current_action=current_action)
+    except:
+        print("update staff current action error")
+        return -1
+    return 1
+
+def getStaffAction(userID):
+    try:
+        unit = User.objects.get(username = userID)
+        return unit.current_action
+    except:
+        return "none"
+
+def maskbaseInsert(remain, total_capacity, capability, address, latitude, longitude):
+    try:
+        unit = MaskBase.objects.create(remain = remain, total_capacity = total_capacity, capability = capability, address = address, latitude = latitude, longitude = longitude)
+        unit.save()
+    except:
+        print("insert maskbase error")
+        return -1
+    return 1
+    
+def maskbaseDelete(address):
+    try:
+        MaskBase.objects.filter(address = address).delete()
+    except:
+        print("delete maskbase error")
+        return -1
+    return 1
+
+def maskbaseCleanup(address):
+    try:
+        MaskBase.objects.filter(address=address).update(remain = 10, capability = 0)
+    except:
+        print("clean up maskbase error")
+        return -1
+    return 1
