@@ -183,7 +183,7 @@ def handleStaffText(message, reply_token, source):
         if(res == 1): text_msg = "請傳送據點位置~"
         else: text_msg = "發生錯誤"
     elif(message.text == "查看需清空的據點"):
-        maskbaseList = getFullMaskbases(0)
+        maskbaseList = getMaskbases(0)
         if(maskbaseList == "none"):
             text_msg = "目前沒有需要清空的據點"
             return_msg = TextSendMessage(text = text_msg)
@@ -226,7 +226,9 @@ def handleStaffLocation(message, reply_token, source):
     if(res == -1):
         text_msg = "發生錯誤"
     elif(res == 1):
-        text_msg = "更新完成!"
+        if(current_action == "create"): text_msg = "新增完成!"
+        elif(current_action == "delete"): text_msg = "刪除完成!"
+        elif(current_action == "cleanup"): text_msg = "清空完成!"
         res = updateStaffAction(userID, "none")
     else:
         text_msg = "請點擊 更新據點按鈕 選擇執行動作~"
@@ -273,7 +275,7 @@ def maskbaseCleanup(address):
         print("clean up maskbase error")
         return -1
     return 1
-    
+
 def getMaskbases(capability):
     try:
         units = MaskBase.objects.filter(capability = capability)
