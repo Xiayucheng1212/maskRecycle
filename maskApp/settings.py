@@ -25,6 +25,8 @@ SECRET_KEY = 'django-insecure-jt=uw^^jy#9*r7uagd31!+0+7ypu!4t@5z^u#2to^l_#ivm+x^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+CORS_ORIGIN_ALLOW_ALL=True
+
 ALLOWED_HOSTS = [
     '8d1b-150-116-47-102.jp.ngrok.io',
     '127.0.0.1',
@@ -33,7 +35,6 @@ ALLOWED_HOSTS = [
 
 MEDIA_ROOT =  os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'index'
+    'index',
+    'corsheaders'
 ]
 
 STATICFILES_DIRS = [
@@ -51,6 +53,8 @@ STATICFILES_DIRS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

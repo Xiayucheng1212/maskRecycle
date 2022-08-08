@@ -38,14 +38,14 @@
                                 <div id="qrcode" style="width: auto;"></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">關閉</button>
                             </div>
                         </div><!-- /.modal-content -->
                     </div><!-- /.modal-dialog -->
                 </div>
             </div>
             <div class="col-8" style="height: 100%; ">
-
+                <!-- <div id="confidence" style="float: left; font-size: 30px; color: rgb(66, 245, 34); margin-left: 20px;">0.9</div> -->
                 <div id="showImage" style="height: 500px; background-color: rgba(167, 167, 167, 1);">
                     <video src="" id="videoInput" style="height: 500px; width: 730px;" ></video>
                     <canvas id="canvasOutput"></canvas>
@@ -98,12 +98,14 @@
                         dataType: 'json',
                         data: {detection_num}
                     }).then((result)=>{
+                        console.log('sent');
                         if( parseInt(result[0]) > 0){
                             mask_num++;
                             // TODO: set success image and keep processing by bluetooth
+                            $("#confidence").html("confidence:" + result[0])
                         }
                     })
-                }, 4000)
+                }, 3000)
             })
         
             function imageCapture(){

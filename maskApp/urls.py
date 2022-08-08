@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
-from index.views import home_page, user_insert,user_update,maskbase_insert,maskbase_update,user_find,user_all,mask_detect
+from index.views import home_page, transmit_exit, transmit_start, transmit_stop, user_insert,user_update,maskbase_insert,maskbase_update,user_find,user_all,mask_detect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -30,5 +30,8 @@ urlpatterns = [
     path('maskbase-insert/', maskbase_insert),
     path('maskbase-update/', maskbase_update),
     path('mask-detect/', mask_detect),
+    path('transmit-start/', transmit_start),
+    path('transmit-stop/', transmit_stop),
+    path('transmit-exit/', transmit_exit),
     path('masklinebot/', include('masklinebot.urls')), #包含應用程式的網址
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
